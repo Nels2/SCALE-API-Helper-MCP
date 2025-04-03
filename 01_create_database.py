@@ -1,0 +1,46 @@
+import sqlite3
+import json
+
+# Load JSON schema
+with open("scale_api_full_schema.json", "r", encoding="utf-8") as file:
+    schema = json.load(file)
+
+# Connect to SQLite database
+conn = sqlite3.connect("api_schema.db")
+cursor = conn.cursor()
+
+# Create a table to store API paths
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS api_endpoints (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path TEXT UNIQUE,
+    methods TEXT,
+    description TEXT,
+    request_body TEXT,
+    responses TEXT
+)
+""")
+
+# Insert API paths and details into the database
+for path, details in schema.get("paths", {}).items():
+    for method, method_details in details.items():
+        description = method_details.get("description", "No description available")
+
+        # Extract request body schema (if available)
+        request_body = method_details.get("requestBody", {}).get("content", {}).get("application/json", {}).get("schema", {})
+        request_body_str = json.dumps(request_body) if request_body else "None"
+
+        # Extract response codes
+        responses = method_details.get("responses", {})
+        response_summary = {code: resp.get("description", "No description") for code, resp in responses.items()}
+        responses_str = json.dumps(response_summary)
+
+        # Store in database
+        cursor.execute("INSERT OR IGNORE INTO api_endpoints (path, methods, description, request_body, responses) VALUES (?, ?, ?, ?, ?)",
+                       (path, method.upper(), description, request_body_str, responses_str))
+
+# Commit changes and close connection
+conn.commit()
+conn.close()
+
+print("> API schema stored successfully in SQLite!")
