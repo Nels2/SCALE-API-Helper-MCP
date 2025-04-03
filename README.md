@@ -12,7 +12,7 @@ I've included scripts 01-02, the full API schema as `scale_api_full_schema.json`
 
   Other models probably will work fine for this, but I have found this model to be the most consistent.
 
-3. open two separate terminal windows, or a split terminal.
+3. open two separate terminal windows, or a split terminal, even `screen` works for this.
 4. in one window run: `python 03_flaskapi.py`
 5. in the other window run: `python 03_llmRAG.py`
 6. Have fun!
