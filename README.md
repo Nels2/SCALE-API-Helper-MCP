@@ -9,7 +9,7 @@ Keep in mind that this is basic RAG so it is definitely no where near perfect. I
 
 ## How To use this project (as-is)
 1. Git Clone this project.
-2. Install the requirements via `latest_requirements.txt`
+2. Install the requirements via `requirements.txt`
 3. Make sure you have ollama installed & running, then make sure you have `mistral:7b` downloaded as well. 
 
   Other models probably will work fine for this, but I have found this model to be the most consistent.
