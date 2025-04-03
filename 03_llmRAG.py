@@ -6,7 +6,7 @@ def query_api_schema(query):
     response = requests.get(f"http://localhost:5086/query?query={query}")
     return response.json()
 
-query = input("!! Ask a question about the API (use the path ONLY for best results, such as /login): ")
+query = input(">> Ask a question about the API: ")
 api_results = query_api_schema(query)
 
 context = "\n".join(
