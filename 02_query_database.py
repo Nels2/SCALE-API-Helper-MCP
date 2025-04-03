@@ -14,7 +14,7 @@ def search_endpoint(query):
     return results
 
 if __name__ == "__main__":
-    query = input("Enter an API path keyword to search: ")  # User input for dynamic search
+    query = input("Enter an API path keyword to search (e.g, /Node): ")  # User input for dynamic search
     endpoints = search_endpoint(query)
 
     if endpoints:
