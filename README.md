@@ -5,6 +5,8 @@ I hope this serves useful to someone else in the near future.
 
 I've included scripts 01-02, the full API schema as `scale_api_full_schema.json`, and api_schema.db to show how I set this up and how it works.
 
+Keep in mind that this is basic RAG so it is definitely no where near perfect. I'll work on this more in the future!
+
 ## How To use this project (as-is)
 1. Git Clone this project.
 2. Install the requirements via `latest_requirements.txt`
