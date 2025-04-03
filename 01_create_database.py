@@ -47,4 +47,4 @@ for path, details in schema.get("paths", {}).items():
 conn.commit()
 conn.close()
 
-print("!! API schema stored successfully in SQLite!")
+print("> API schema stored successfully in SQLite!")
