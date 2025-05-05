@@ -11,7 +11,24 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 # Function to make requests to API
 async def make_request(url: str, method: str, headers: dict = None, data: dict = None, params: dict = None) -> dict[str, Any] | None:
-    """Make a request to the API with proper error handling."""
+    """
+    Makes an HTTP request to a specified SCALE API endpoint, handles errors, and returns the response.
+    
+    Args:
+        url (str): The URL of the API endpoint.
+        method (str): The HTTP method to be used for the request (GET, POST, PUT, DELETE, etc.).
+        headers (Optional[Dict[str, str]]): A dictionary containing headers like Authorization.
+        data (Optional[Dict[str, Any]]): The request body data for POST, PUT, or PATCH methods.
+        params (Optional[Dict[str, Any]]): Query parameters for GET requests.
+
+    Returns:
+        Optional[Dict[str, Any]]: The parsed JSON response from the API, or an error message if the request fails.
+    
+    Description:
+        This function makes asynchronous API requests using the `httpx` library. It supports common HTTP
+        methods (GET, POST, PUT, DELETE) and includes error handling for both network issues and HTTP errors.
+        It raises exceptions for non-2xx HTTP responses and provides detailed error messages for debugging.
+    """
     headers = headers or {}
     headers["User-Agent"] = USER_AGENT
     async with httpx.AsyncClient(verify=False) as client:
@@ -31,7 +48,20 @@ async def make_request(url: str, method: str, headers: dict = None, data: dict =
 
 # Function to search for the endpoint in the database
 def search_endpoint(query: str):
-    """Search for an API endpoint in the local schema database."""
+    """
+    Searches for a matching API endpoint in the local SQLite database.
+
+    Args:
+        query (str): The query string to search for in the API schema's paths.
+
+    Returns:
+        list[Dict[str, Any]]: A list of endpoint data (paths, methods, descriptions, etc.) that match the query.
+        
+    Description:
+        This function queries the local SCALE API database (sqlite) for API endpoints that match a given query string.
+        It returns a structured list containing the path, HTTP method, description, request body, and response details
+        for each endpoint that matches the query. Useful for dynamically finding relevant API documentation.
+    """
     conn = sqlite3.connect("api_schema.db")
     cursor = conn.cursor()
     cursor.execute("SELECT path, method, description, request_body, responses FROM api_endpoints WHERE path LIKE ?", (f"%{query}%",))
@@ -44,9 +74,19 @@ def search_endpoint(query: str):
 
 @mcp.tool()
 async def query_api(query: str) -> str:
-    """Search the API schema for an endpoint.
+    """
+    Queries the local SCALE REST API schema for matching endpoints and returns them in JSON format.
+
     Args:
-        query: The path or query to search for in the API schema.
+        query (str): The path or query to search for in the local API schema.
+
+    Returns:
+        str: A JSON string containing all matching API paths or an error message if no matches are found.
+    
+    Description:
+        This function performs a local database search to find API endpoints based on the given query string.
+        It formats the results into a structured JSON response, making it easy for external clients to access
+        the available API paths, methods, and descriptions.
     """
     # Search for the endpoint in the local schema database
     results = search_endpoint(query)
@@ -60,17 +100,27 @@ async def query_api(query: str) -> str:
 
 @mcp.tool()
 async def run_api(query: str, method: str, token: str) -> str:
-    """Run API Query by forwarding the request to the external API with the query, method, and token.
+    """
+    Forwards the query to the external SCALE REST API using the provided method and authorization token.
+    
     Args:
-        query: The path or query to search for in the API schema.
-        method: The method to use: GET, POST, PATCH, PUT, DELETE.
-        token: The API key for external API authorization.
+        query (str): The path or query to search for in the external SCALE API.
+        method (str): The HTTP method to use (GET, POST, PUT, DELETE, etc.).
+        token (str): The API token used for authentication.
+    
+    Returns:
+        str: The JSON string of the API response or an error message if the request fails.
+    
+    Description:
+        This function forwards the provided query and method to the external API, adds the necessary
+        authentication token to the request headers, and handles the request asynchronously.
+        It also handles response formatting and error handling to return a clean response.
     """
     # Prepare headers and data for the request
     
     # Host and URL setup
-    host = "172.18.33.215"
-    scale_api_url = f"https://{host}/rest/v1{query}"  # The query can be used as the API path here
+    host = "172.18.33.215/rest/v1"
+    scale_api_url = f"https://{host}{query}"  # The query can be used as the API path here
 
     # Prepare headers and data for the request
     xcred = token
