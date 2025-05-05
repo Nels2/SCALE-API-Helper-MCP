@@ -5,8 +5,9 @@ import json
 from mcp.server.fastmcp import FastMCP
 import requests
 
+
 # Initialize FastMCP server
-mcp = FastMCP("scale-api-proxy")
+mcp = FastMCP("scale-api-querySchemaOnly")
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 
 # Function to make requests to API
@@ -97,42 +98,6 @@ async def query_api(query: str) -> str:
     # Return all paths as available options
     available_paths = [{"path": endpoint_info["path"], "description": endpoint_info["description"], "method": endpoint_info["method"], "request_body": endpoint_info["request_body"], "response": endpoint_info["responses"]} for endpoint_info in results]
     return json.dumps({"available_paths": available_paths})
-
-@mcp.tool()
-async def run_api(query: str, method: str, token: str) -> str:
-    """
-    Forwards the query to the external SCALE REST API using the provided method and authorization token.
-    
-    Args:
-        query (str): The path or query to search for in the external SCALE API.
-        method (str): The HTTP method to use (GET, POST, PUT, DELETE, etc.).
-        token (str): The API token used for authentication.
-    
-    Returns:
-        str: The JSON string of the API response or an error message if the request fails.
-    
-    Description:
-        This function forwards the provided query and method to the external API, adds the necessary
-        authentication token to the request headers, and handles the request asynchronously.
-        It also handles response formatting and error handling to return a clean response.
-    """
-    # Prepare headers and data for the request
-    
-    # Host and URL setup
-    host = "172.18.33.215/rest/v1"
-    scale_api_url = f"https://{host}{query}"  # The query can be used as the API path here
-
-    # Prepare headers and data for the request
-    xcred = token
-    credentials = f"Basic {xcred}"
-    headers = {"Authorization": credentials, "Content-Type": "application/json", "Connection": "keep-alive"}
-    data = None  # This would depend on your API's request body
-    params = None  # Query parameters, if any
-
-    # Forward the request to the external API and return the response
-    response = await make_request(f"{scale_api_url}", method, headers=headers, data=data, params=params)
-    return response
-
 
 if __name__ == "__main__":
     # Run the MCP server on stdio transport
