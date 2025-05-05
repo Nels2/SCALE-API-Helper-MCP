@@ -1,4 +1,4 @@
-# SCALE API Helper (LLM)
+# SCALE API Helper (LLM + MCP)
 
 This project was created to teach myself the SCALE API.
 I hope this serves useful to someone else in the near future.
