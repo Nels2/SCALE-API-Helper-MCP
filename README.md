@@ -2,7 +2,7 @@
 
 This project was created to teach myself the SCALE API.
 I hope this serves useful to someone else in the near future.
-Recent: 05/05/2025: I Added the MCP Funcationaly, use both 03_mcp*.py files!
+- Recent: On 05/05/2025 I Added the MCP Funcations, use both 03_mcp*.py files, have fun in OWI or Claude Desktop!!!!!
 
 I've included scripts 01-02, the full API schema as `scale_api_full_schema.json`, and api_schema.db to show how I set this up and how it works.
 
