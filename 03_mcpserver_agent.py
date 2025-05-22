@@ -4,6 +4,11 @@ import sqlite3
 import json
 from mcp.server.fastmcp import FastMCP
 import requests
+import subprocess
+import pickle
+import os
+import time
+from datetime import datetime
 from config_alt import *
 print(xcred)
 
@@ -68,18 +73,84 @@ async def run_api(query: str, method: str) -> str:
     # Prepare headers and data for the request
     
     # Host and URL setup
-    host = "172.18.33.215/rest/v1"
+    host = "172.18.33.216/rest/v1"
     scale_api_url = f"https://{host}{query}"  # The query can be used as the API path here
-
+    api_headers = pickle.load( open( "session/aisys_sessionLogin.p", "rb")) #session-based auth!
     # Prepare headers and data for the request
-    credentials = f"Basic {xcred}"
-    headers = {"Authorization": credentials, "Content-Type": "application/json", "Connection": "keep-alive"}
+
+
+    
+    # Basic Auth 
+    #credentials = f"Basic {xcred}"
+    #headers = {"Authorization": credentials, "Content-Type": "application/json", "Connection": "keep-alive"}
     data = None  # This would depend on your API's request body
     params = None  # Query parameters, if any
 
     # Forward the request to the external API and return the response
-    response = await make_request(f"{scale_api_url}", method, headers=headers, data=data, params=params)
+    response = await make_request(f"{scale_api_url}", method, headers=api_headers, data=data, params=params)
     return response
+
+@mcp.tool()
+async def generate_session() -> str:
+    """
+    Executes gen_sessionID.py script to generate a new session ID, which is needed to make a request to the API.
+    """
+    try:
+        result = subprocess.run(['python', 'gen_sessionID.py'], capture_output=True, text=True)
+        result.check_returncode()
+        session_id = result.stdout.strip()
+        return session_id
+    except subprocess.CalledProcessError as e:
+        return f"Error generating session ID: {e}"
+
+@mcp.tool()
+async def get_session() -> str:
+    """
+    Executes get_sessionID.py script to find the current ID, then validates based on a 12 hour time frame..
+    """
+    # Function to get current time in seconds
+    def current_time_seconds():
+        return int(time.time())
+    try:
+        SESSION_FILE = "session/aisys_sessionLogin.p"
+        api_headers = pickle.load( open( SESSION_FILE, "rb"))
+        # Get last modified time of the session file
+        last_mod_time = os.path.getmtime(SESSION_FILE)
+        current_time = current_time_seconds()
+        age = current_time - last_mod_time
+
+        # Extract the Cookie header
+        cookie_header = api_headers.get('Cookie', '')
+
+        # Extract the session ID from the cookie header
+        if cookie_header.startswith('sessionID='):
+            session_id = cookie_header[len('sessionID='):]
+        else:
+            session_id = ''
+
+        ageDif = age >= 43200  # True if older than 12 hours
+        if not ageDif:
+            return f"Found Valid Session: {session_id} | Age: {age} seconds"
+        else:
+            return f"Found a Session, but it is not valid (Over 12Hrs Old), please generate another one: {session_id} [Kill This Session ID]"
+    except subprocess.CalledProcessError as e:
+        #return f"Error finding a valid session, this usually means a new one needs to be generated. As of {curTime}, this is {age} old [{lastExcTime}] : {e}"
+
+
+        return f"Error finding a valid session, this usually means a new one needs to be generated.: {e}"
+
+@mcp.tool()
+async def kill_session() -> str:
+    """
+    Executes kill_sessionID.py script to terminates the connection, use generate_session() to get a new session going..
+    """
+    try:
+        result = subprocess.run(['python', 'kill_sessionID.py', session_id], capture_output=True, text=True)
+        result.check_returncode()
+        return f"Session {session_id} killed successfully."
+    except subprocess.CalledProcessError as e:
+        return f"Error killing session {session_id}: {e}"
+
 
 
 if __name__ == "__main__":
