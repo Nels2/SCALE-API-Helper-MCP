@@ -1,24 +1,98 @@
-# SCALE API Helper (LLM + MCP)
+# SCALE API Helper + MCP (LLM-Aided Exploration)
 
-This project was created to teach myself the SCALE API.
-I hope this serves useful to someone else in the near future.
-- Recent: On 05/05/2025 I Added the MCP Funcations, use both 03_mcp*.py files, have fun in OWI or Claude Desktop!!!!!
+This project offers a secure, interactive bridge between a local LLM environment and the SCALE Computing HyperCore REST API. It enables querying endpoints, managing session-based authentication, and performing live API actions through a token-secured FastAPI + MCP integration.
+
+Originally developed to understand and experiment with the SCALE API, this evolved into a fully functional developer tool with OpenWebUI, Claude Desktop, or cURL support.
+
 
 I've included scripts 01-02, the full API schema as `scale_api_full_schema.json`, and api_schema.db to show how I set this up and how it works.
 
-Keep in mind that this is basic RAG so it is definitely no where near perfect. I'll work on this more in the future!
+Keep in mind that this is definitely no where near perfect. I'll work on this more in the future!
 
-## How To use this project (as-is)
-1. Git Clone this project.
-2. Install the requirements via `requirements.txt`
-3. Make sure you have ollama installed & running, then make sure you have `mistral:7b` downloaded as well. 
+## Features
 
-  Other models probably will work fine for this, but I have found this model to be the most consistent.
+- **FastAPI Server** (`fastapi_server.py`) for exposing routes.
+- **Tool Implementation** (`scale_tools.py`) for SCALE session lifecycle + query forwarding.
+- **Bearer Auth** integration for secure access.
+- **RAG Compatibility** with LLMs through MCP protocol.
+- **Swagger UI (/docs)** with full OpenAPI support.
 
-3. open two separate terminal windows, or a split terminal, even `screen` works for this.
-4. in one window run: `python 03_flaskapi.py`
-5. in the other window run: `python 03_llmRAG.py`
-6. Have fun!
+## File Overview
+
+| File                            | Purpose                                               |
+| ------------------------------- | ----------------------------------------------------- |
+| `fastapi_server.py`             | Exposes HTTP routes and secures them with bearer auth |
+| `scale_tools.py`                | Defines tools: run\_api, query\_api, session ops      |
+| `03_mcpserver_agent_no-auth.py` | [DEPRECATED] Raw MCP without auth                     |
+| `03_mcpserver_helper.py`        | [DEPRECATED] Helper for exploring the API             |
+
+---
+
+
+## Requirements
+- Python 3.10+
+- [Ollama](https://ollama.com/) running reachable by you at an openai http/https endpoint. (optional)
+- MCP runtime (e.g. via `uvx mcpo`)
+- Tools: `fastapi`, `httpx`, `pydantic`, `uvicorn`
+
+I personally used qwen3 at 0.6b, 1.7b, and 4b along with llama-3.2-3b-instruct from **unsloth**.
+
+MCP runtime (e.g. via uvx mcpo)
+
+Tools: fastapi, httpx, pydantic, uvicorn
+
+## Setup Instructions
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/Nels2/SCALE-API-Helper
+cd scale-api-agent
+uv pip install -r requirements.txt
+```
+
+### 2. Configure
+
+Edit `config_alt.py` with your actual token:
+
+```python
+MCP_BEARER_TOKEN = "your-secret-token"
+```
+
+### 3. Run the Server
+
+```bash
+uvicorn fastapi_server:app --host 0.0.0.0 --port 5075
+```
+
+Then visit: [http://localhost:5075/docs](http://localhost:5075/docs)
+
+## MCP Usage (for OpenWebUI)
+
+### Launch as MCP HTTP Tool
+
+```bash
+uvx mcpo --port 5075 -- uv run fastapi_server.py
+```
+
+Make sure OpenWebUI has this connection added:
+
+```
+URL: http://<your-ip>:5075/openapi.json
+Auth: Bearer <your-token>
+```
+
+---
+
+## Available Tools
+
+- `run_api(query: str, method: str)`
+- `query_api(query: str)`
+- `generate_session()`
+- `get_session()`
+- `kill_session()`
+
+All tools use dynamic session-based authentication against the SCALE cluster, with the session stored and validated from a local `.p` file.
 
 
 ## Example output
@@ -72,3 +146,23 @@ mistral:7b's Response:
    - Import a VM: POST `/VirDomain/import`
    - Clone a VM from snapshot: POST `/VirDomain/{virDomainUUID}/clone`
 ```
+
+
+
+# Final Notes
+## Architecture Overview
+
+- `fastapi_server.py`: Handles route definitions, security, OpenAPI schema, and MCP tool forwarding.
+- `scale_tools.py`: Implements all logic for SCALE API interaction.
+- Tools are registered via `mcp.tool()` and referenced in `get_tool_refs()` for flexible use.
+
+## Dev Notes
+
+- Inspired by usage of `mistral:7b` with basic RAG. Although mistral seems to be more dated model nowadays..
+- Can be extended to use structured OpenAPI schema in memory for smarter retrieval.
+- Tested against **SCALE HyperCore v9.4.30.217736**
+
+
+## License
+
+MIT. Use and adapt freely.
