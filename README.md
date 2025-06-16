@@ -21,7 +21,7 @@ Keep in mind that this is definitely no where near perfect. I'll work on this mo
 
 | File                            | Purpose                                               |
 | ------------------------------- | ----------------------------------------------------- |
-| `fastapi_server.py`             | Exposes HTTP routes and secures them with bearer auth |
+| `03_mcpserver_agent+auth.py`    | Exposes HTTP routes and secures them with bearer auth |
 | `scale_tools.py`                | Defines tools: run\_api, query\_api, session ops      |
 | `03_mcpserver_agent_no-auth.py` | [DEPRECATED] Raw MCP without auth                     |
 | `03_mcpserver_helper.py`        | [DEPRECATED] Helper for exploring the API             |
