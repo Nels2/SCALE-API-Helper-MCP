@@ -35,6 +35,7 @@ tool_refs = get_tool_refs()
 class RunAPIRequest(BaseModel):
     query: str
     method: str
+    body: dict | None = None  # Optional, for POST/PUT/other methods, this was completely missing lol
 
 class QueryRequest(BaseModel):
     query: str
@@ -45,7 +46,7 @@ class EmptyBody(BaseModel):
 # === Routes
 @app.post("/run_api", tags=["SCALE API Prod. Interaction"])
 async def run_api_route(body: RunAPIRequest):
-    return await tool_refs["run_api"](query=body.query, method=body.method)
+    return await tool_refs["run_api"](query=body.query, method=body.method, body=body.body)
 
 @app.post("/query_api", tags=["SCALE API Explore"])
 async def query_api_route(body: QueryRequest):
