@@ -18,9 +18,9 @@ api_headers = {
     }
 
 login_payload = json.dumps({
-      "username": username,
-      "password": userpass,
-      "useOIDC": False
+    "username": username,
+    "password": userpass,
+    "useOIDC": False
 })
 
 login_response = requests.request("POST",
