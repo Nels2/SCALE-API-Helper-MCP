@@ -29,10 +29,10 @@ async def make_request(url: str, method: str, headers: dict = None, data: dict =
 
 
 @mcp.tool()
-async def run_api(query: str, method: str) -> str:
+async def run_api(query: str, method: str, body: dict | None = None) -> str:
     scale_api_url = f"https://172.18.33.216/rest/v1{query}"
     api_headers = pickle.load(open("/Projects/api_scale/session/aisys_sessionLogin.p", "rb"))
-    return await make_request(scale_api_url, method, headers=api_headers)
+    return await make_request(scale_api_url, method, headers=api_headers, data=body)
 
 
 # Function to search for the endpoint in the database
