@@ -24,15 +24,17 @@ async def make_request(url: str, method: str, headers: dict = None, data: dict =
             response = await getattr(client, method.lower())(url, headers=headers, json=data, params=params, timeout=30.0)
             response.raise_for_status()
             return response.json()
+        except httpx.HTTPStatusError as e:
+            return {"error": str(e), "details": e.response.text}
         except Exception as e:
             return {"error": str(e)}
 
-
 @mcp.tool()
-async def run_api(query: str, method: str, body: dict | None = None) -> str:
-    scale_api_url = f"https://172.18.33.216/rest/v1{query}"
+async def run_api(query: str, method: str, payload: dict = None) -> str:
+    host = "172.18.33.216"
+    scale_api_url = f"https://{host}/rest/v1{query}"
     api_headers = pickle.load(open("/Projects/api_scale/session/aisys_sessionLogin.p", "rb"))
-    return await make_request(scale_api_url, method, headers=api_headers, data=body)
+    return await make_request(scale_api_url, method, headers=api_headers, data=payload)
 
 
 # Function to search for the endpoint in the database
@@ -90,16 +92,26 @@ async def query_api(query: str) -> str:
 
 @mcp.tool()
 async def generate_session() -> str:
+    """
+    Executes gen_sessionID.py script to generate a new session ID, which is needed to make a request to the API.
+    """
     try:
-        result = subprocess.run(['python', '/Projects/api_scale/gen_sessionID.py'], capture_output=True, text=True)
+        result = subprocess.run(
+            ['/Projects/api_scale/vfx/bin/python', '/Projects/api_scale/gen_sessionID.py'], 
+            capture_output=True, 
+            text=True
+        )
         result.check_returncode()
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        return f"Error generating session ID: {e}"
+        return f"Error generating session ID:\n{e.stderr or 'No stderr'}\n\nstdout:\n{e.stdout}"
 
 
 @mcp.tool()
 async def get_session() -> str:
+    """
+    Executes get_sessionID.py script to find the current ID, then validates based on a 12 hour time frame..
+    """
     try:
         SESSION_FILE = "/Projects/api_scale/session/aisys_sessionLogin.p"
         last_mod_time = os.path.getmtime(SESSION_FILE)
@@ -113,8 +125,11 @@ async def get_session() -> str:
 
 @mcp.tool()
 async def kill_session() -> str:
+    """
+    Executes kill_sessionID.py script to terminates the connection, use generate_session() to get a new session going..
+    """
     try:
-        result = subprocess.run(['python', '/Projects/api_scale/kill_sessionID.py'], capture_output=True, text=True)
+        result = subprocess.run(['/Projects/api_scale/vfx/bin/python', '/Projects/api_scale/kill_sessionID.py'], capture_output=True, text=True)
         result.check_returncode()
         return "Session killed."
     except subprocess.CalledProcessError as e:
