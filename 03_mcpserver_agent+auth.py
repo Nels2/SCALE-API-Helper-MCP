@@ -17,7 +17,7 @@ def verify_bearer_token(credentials: HTTPAuthorizationCredentials = Depends(secu
 # === FastAPI app with global Bearer Auth enforcement
 app = FastAPI(
     title="scale-api-agent",
-    version="1.5.1",
+    version="1.5.3",
     description="SCALE API Proxy server secured with Bearer Auth.",
     dependencies=[Depends(verify_bearer_token)],
     swagger_ui_oauth2_redirect_url=None,
