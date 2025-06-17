@@ -4,6 +4,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.models import APIKey, APIKeyIn, SecurityScheme
 from scale_tools import get_tool_refs
+from typing import Optional, Dict, Any
 from config_alt import MCP_BEARER_TOKEN
 
 # === Auth setup
@@ -17,7 +18,7 @@ def verify_bearer_token(credentials: HTTPAuthorizationCredentials = Depends(secu
 # === FastAPI app with global Bearer Auth enforcement
 app = FastAPI(
     title="scale-api-agent",
-    version="1.5.3",
+    version="1.5.4",
     description="SCALE API Proxy server secured with Bearer Auth.",
     dependencies=[Depends(verify_bearer_token)],
     swagger_ui_oauth2_redirect_url=None,
@@ -35,7 +36,7 @@ tool_refs = get_tool_refs()
 class RunAPIRequest(BaseModel):
     query: str
     method: str
-    body: dict | None = None  # Optional, for POST/PUT/other methods, this was completely missing lol
+    payload: Optional[Dict[str, Any]] = None
 
 class QueryRequest(BaseModel):
     query: str
@@ -46,7 +47,7 @@ class EmptyBody(BaseModel):
 # === Routes
 @app.post("/run_api", tags=["SCALE API Prod. Interaction"])
 async def run_api_route(body: RunAPIRequest):
-    return await tool_refs["run_api"](query=body.query, method=body.method, body=body.body)
+    return await tool_refs["run_api"](query=body.query, method=body.method, payload=body.payload)
 
 @app.post("/query_api", tags=["SCALE API Explore"])
 async def query_api_route(body: QueryRequest):
