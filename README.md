@@ -95,7 +95,7 @@ Auth: Bearer <your-token>
 All tools use dynamic session-based authentication against the SCALE cluster, with the session stored and validated from a local `.p` file.
 
 
-## Example output
+## Example RAG output via python
 Question Example 0, Straight Path: 
 ``` 
 Ask a question about the API: /User
