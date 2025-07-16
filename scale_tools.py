@@ -17,13 +17,44 @@ mcp = FastMCP("scale-api-agent")
 
 
 async def make_request(url: str, method: str, headers: dict = None, data: dict = None, params: dict = None) -> dict[str, Any] | None:
+    """
+    Makes an HTTP request to a specified SCALE Rest API endpoint, handles errors, and returns the response.
+    
+    Args:
+        url (str): The URL of the API endpoint.
+        method (str): The HTTP method to be used for the request (GET, POST, PUT, DELETE, etc.).
+        headers (Optional[Dict[str, str]]): A dictionary containing headers like Authorization.
+        data (Optional[Dict[str, Any]]): The request body data for POST, PUT, or PATCH methods.
+        params (Optional[Dict[str, Any]]): Query parameters for GET requests.
+
+    Returns:
+        Optional[Dict[str, Any]]: The parsed JSON response from the API, or an error message if the request fails.
+    
+    Description:
+        This function makes asynchronous API requests using the `httpx` library. It supports common HTTP
+        methods (GET, POST, PUT, DELETE) and includes error handling for both network issues and HTTP errors.
+        It raises exceptions for non-2xx HTTP responses and provides detailed error messages for debugging.
+    """
     headers = headers or {}
     headers["User-Agent"] = USER_AGENT
     async with httpx.AsyncClient(verify=False) as client:
         try:
-            response = await getattr(client, method.lower())(url, headers=headers, json=data, params=params, timeout=30.0)
+            method_lower = method.lower()
+            request_args = {"headers": headers, "timeout": 30.0}
+
+            if method_lower in ["get", "delete", "head", "options"]:
+                # For methods that do not send JSON body, use params for query parameters
+                request_args["params"] = data or params
+            else:
+                # For methods that can send a JSON body
+                request_args["json"] = data
+                if params:
+                    request_args["params"] = params
+
+            response = await getattr(client, method_lower)(url, **request_args)
             response.raise_for_status()
             return response.json()
+
         except httpx.HTTPStatusError as e:
             return {"error": str(e), "details": e.response.text}
         except Exception as e:
