@@ -23,12 +23,13 @@ Built to go beyond API exploration: this is a functional operator tool for takin
 
 | File | Purpose |
 |---|---|
-| `fastapi_server.py` | Route definitions, Bearer auth, OpenAPI schema, MCP forwarding |
+| `03_mcpserver_agent+auth.py` | Route definitions, Bearer auth, OpenAPI schema, MCP forwarding |
 | `scale_tools.py` | All SCALE API logic: session lifecycle, VM operations, query forwarding |
+| `models.py` | Pydantic models for use with Swagger UI |
 | `config_alt.py` | Bearer token and cluster host configuration |
 | `scale_api_full_schema.json` | Full HyperCore OpenAPI schema (used for RAG/exploration) |
 | `api_schema.db` | SQLite schema store for LLM-aided endpoint discovery |
-| `01_*.py` / `02_*.py` | Setup and exploration scripts |
+| `01_*.py` / `02_*.py` / `03_flaskapi.py` / `03_llmRAG.py` | Setup and exploration scripts |
 
 ---
 
@@ -37,7 +38,7 @@ Built to go beyond API exploration: this is a functional operator tool for takin
 - Python 3.10+
 - MCP runtime via `uvx mcpo`
 - Dependencies: `fastapi`, `httpx`, `pydantic`, `uvicorn`
-- Ollama (optional) — tested with `qwen3` (0.6b–4b) and `llama-3.2-3b-instruct`
+- any OpenAI API Compat. Server — tested with `nvidia/NVIDIA-Nemotron-3-Nano-4B-FP8` on vLLM (0.18.1)
 
 ---
 
@@ -63,8 +64,10 @@ SCALE_HOST = "your-cluster-ip"
 ### 3. Run
 
 ```bash
-uvicorn fastapi_server:app --host 0.0.0.0 --port 5075
+uvx mcpo --port 5075 -- uvicorn 03_mcpserver_agent+auth:app --host 0.0.0.0 --port 5075
 ```
+
+Optionally, add --reload if you plan to make changes and dont wan't to kill the server.
 
 Swagger UI: [http://localhost:5075/docs](http://localhost:5075/docs)
 
@@ -106,32 +109,48 @@ Add to your `claude_desktop_config.json`:
 ---
 
 ## Available Tools
-
+ 
 ### Session Management
 | Tool | Description |
 |---|---|
 | `generate_session` | Authenticate against SCALE and store session |
-| `get_session` | Retrieve current session info |
+| `get_session` | Retrieve current session info (validates 12hr window) |
 | `kill_session` | Invalidate active session |
-
+ 
+### Read Operations
+| Tool | Description |
+|---|---|
+| `ping_read` | Check connectivity and session validity |
+| `cluster_read` | Retrieve cluster node information |
+| `clusterSpec_read` | Retrieve cluster spec/configuration |
+| `condition_read` | List all active conditions/alerts |
+| `user_read` | List all users on the system |
+| `iso_read` | List all ISOs |
+| `drive_read` | List all physical drives |
+| `virtualDisk_read` | List all virtual disks |
+| `vmNetDevices_read` | List all virtual network devices |
+| `vmSnapshots_read` | List all VM snapshots |
+| `taskTagStatus_read` | List all task/status tags |
+| `taskTagStatusFilter` | Get status for a specific task tag by ID |
+ 
 ### VM Operations
 | Tool | Description |
 |---|---|
-| `getVM_details` | Fetch full VM configuration |
-| `getVM_sysStats` | Retrieve live VM system stats |
-| `changeVM_state` | Start, stop, reboot a VM |
+| `fetch_vm` | Search VMs by name or user (via NMAPX Dash) |
+| `getVM_details` | Fetch full VM configuration by UUID |
+| `getVM_sysStats` | Retrieve live CPU, memory, disk, and network stats |
+| `changeVM_state` | Take action on a VM: `START`, `SHUTDOWN`, `STOP`, `PAUSE`, `REBOOT`, `RESET`, `LIVEMIGRATE`, `NMI` |
 | `snapshotVM` | Take a named snapshot of a VM |
 | `delete_snapshotVM` | Delete a snapshot by UUID |
 | `cloneVM` | Clone a VM |
-| `exportVM` | Export a VM to SMB target |
-
-### Exploration
+| `exportVM` | Export a VM to the configured SMB archive target |
+ 
+### Raw Access
 | Tool | Description |
 |---|---|
-| `run_api` | Raw proxy call — any method + payload |
-| `query_api` | Schema-aware endpoint query |
-| `fetch_vm` | Search VMs by name or user |
-
+| `run_api` | Direct proxy call — any endpoint, method, and payload |
+| `query_api` | Search the local schema DB for matching endpoints |
+ 
 ---
 
 ## Architecture
