@@ -9,19 +9,15 @@ with open("scale_api_full_schema.json", "r", encoding="utf-8") as file:
 conn = sqlite3.connect("api_schema.db")
 cursor = conn.cursor()
 
-# Drop table (optional, only do this if resetting DB)
-# cursor.execute("DROP TABLE IF EXISTS api_endpoints")
-
-# Create table for storing API endpoints
+# Create a table to store API paths
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS api_endpoints (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    path TEXT,
-    method TEXT,
+    path TEXT UNIQUE,
+    methods TEXT,
     description TEXT,
     request_body TEXT,
-    responses TEXT,
-    UNIQUE(path, method)  -- Ensure each path-method combination is unique
+    responses TEXT
 )
 """)
 
@@ -40,11 +36,11 @@ for path, details in schema.get("paths", {}).items():
         responses_str = json.dumps(response_summary)
 
         # Store in database
-        cursor.execute("INSERT OR IGNORE INTO api_endpoints (path, method, description, request_body, responses) VALUES (?, ?, ?, ?, ?)",
+        cursor.execute("INSERT OR IGNORE INTO api_endpoints (path, methods, description, request_body, responses) VALUES (?, ?, ?, ?, ?)",
                        (path, method.upper(), description, request_body_str, responses_str))
 
 # Commit changes and close connection
 conn.commit()
 conn.close()
 
-print("> API schema stored successfully in SQLite!")
+print("✅ API schema stored successfully in SQLite!")
