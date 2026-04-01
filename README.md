@@ -160,7 +160,7 @@ mistral:7b's Response:
 
 - Inspired by usage of `mistral:7b` with basic RAG. Although mistral seems to be more dated model nowadays..
 - Can be extended to use structured OpenAPI schema in memory for smarter retrieval.
-- Tested against **SCALE HyperCore v9.4.30.217736**
+- Tested against **SCALE HyperCore v9.4.30.217736** & **v9.6.19.223352**
 
 
 ## License
